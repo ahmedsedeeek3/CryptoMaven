@@ -28,4 +28,4 @@ def create_item():
     return jsonify({"item_name": name, "item_price": price, "is_offer": is_offer})
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=False)
