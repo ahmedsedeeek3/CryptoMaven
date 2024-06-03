@@ -1,7 +1,6 @@
-Flask
-gunicorn
+
 telethon
 python-dotenv
-logging
 pytest
-
+streamlit
+streamlit_authenticator

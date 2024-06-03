@@ -1,0 +1,6 @@
+user1:
+  name: User One
+  password: $2b$12$RsMxce4DUa8LR4AIbQEcqeoDKQp2TVnkMySGStUrANUSX3U/IDStu
+user2:
+  name: User Two
+  password: $2b$12$hDsgFkYaHXWRu4m2AIN9oeTMU2DISr2Aei8TX4yIc0nJdaCmpoT/C
