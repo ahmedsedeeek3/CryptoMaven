@@ -1,87 +1,109 @@
-import streamlit as st
-import bcrypt
-import yaml
-from yaml.loader import SafeLoader
+import asyncio
+from utils.db_connectors.firbase import FirebaseClient
+import time 
+from utils.social_conctors.telegramUser import TelegramUserListener
+from dotenv import load_dotenv
+import os
+from utils.social_conctors.twitter import TwitterOAuth
+from utils.ai_connectors.open_ai import OpenAIChat
+from domain.dataGen.openaigen import OpenAIGen
+from domain.dataCollecting.collect_data import collectDataTodb
+load_dotenv()
 
-# Define a function to check passwords
-def check_password(password, hashed):
-    return bcrypt.checkpw(password.encode(), hashed.encode())
+# Constants for Telegram API
+API_ID = int(os.getenv("API_ID"))
+API_HASH = os.getenv("API_HASH")
+# x.com
+consumer_key = os.environ.get("API_KEY")
+consumer_secret = os.environ.get("API_SECRET_KEY")
+bearer_token = os.environ.get("BEARER_TOKEN")
+collectDataTodb =collectDataTodb()
+generator = OpenAIGen()
+# https://t.me/+w89MI4kxRqRmZjZk
 
-# Load the users from the yaml file
-with open('config.yaml') as file:
-    users = yaml.load(file, Loader=SafeLoader)
+TeleClient = TelegramUserListener(session_name="reader",
+                                  api_id=API_ID,
+                                  api_hash=API_HASH,
+                                  target_chat_username="@trending")
 
-# Authentication function
-def authenticate(username, password):
-    if username in users and check_password(password, users[username]["password"]):
-        return True
-    return False
+TeleClient.run()
 
-# Streamlit app
-st.title("Login")
 
-# Session state to keep track of login status
-if "authenticated" not in st.session_state:
-    st.session_state.authenticated = False
+    # TeleClient.send_message("+w89MI4kxRqRmZjZk","any")
+# asyncio.run(TeleClient.send_message("@cryptoMissionX", "This is a test message!"))
 
-if st.session_state.authenticated:
-    st.success(f"Welcome {users[st.session_state.username]['name']}!")
+# async def send_message():
+#     await TeleClient.send_message("@cryptoMissionX", "This is a test10 message!")    
+# asyncio.run(send_message())
+# TeleClient.run()
+# Twitter = TwitterOAuth(consumer_key, consumer_secret,bearer_token)
 
-    st.title("Streamlit App")
 
-    st.header("Create a new item")
-    name = st.text_input("Item name")
-    price = st.number_input("Item price", min_value=0.0, step=0.01)
-    is_offer = st.checkbox("Is offer?")
 
-    if st.button("Create Item"):
-        item_data = {
-            "name": name,
-            "price": price,
-            "is_offer": is_offer
-        }
-        st.success("Item created successfully!")
-        st.json(item_data)
 
-    st.header("Get item details")
-    item_id = st.number_input("Item ID", min_value=1, step=1)
-    query = st.text_input("Query parameter (optional)")
+# payload = {"text": '''one more time  Crypto Market Update: June 4, 2024 🌐💹
+# Fear & Greed Index: Greed (73) 🟢
+# Market Cap: $2.56T (+0.01%) 📈
+# BTC: $68.9K (+0.31%) 🟩
+# ETH: $3.76K (-1.35%) 🟥
+# BTC Dominance: 54.59% 🔥
+# '''}
+# "go_publish":True,
+#                     "ai":False,
+#                     "ai_teleg_completed":False,
+#                     "ai_twitter_completed":False,
+#                     "ai_twitch_completed":False,
+#                     "ai_telegram_marketing_completed":False,
+#                     "ai_teleg_completed":False,
+#                     "ai_message_telegram_bot":"",
+#                     "ai_message_twitter":"",
+#                     "ai_message_twitch":"",
+#                     "ai_message_telegram_marketing":"",
+#                     "img":img,
+#                     "img_url":photo_path,
+#                     "published_tel":False,
+#                     "published_twitter":False,
+#                     "published_twitch":False,
+#                     "published_marketing":False,
 
-    if st.button("Get Item"):
-        item_data = {
-            "item_id": item_id,
-            "query": query
-        }
-        st.success("Item retrieved successfully!")
-        st.json(item_data)
 
-    st.header("Update an item")
-    update_item_id = st.number_input("Item ID to update", min_value=1, step=1)
-    update_name = st.text_input("Updated item name")
-    update_price = st.number_input("Updated item price", min_value=0.0, step=0.01)
-    update_is_offer = st.checkbox("Is offer?", key="update_is_offer")
+# Set a document
+    
 
-    if st.button("Update Item"):
-        update_data = {
-            "name": update_name,
-            "price": update_price,
-            "is_offer": update_is_offer
-        }
-        st.success("Item updated successfully!")
-        st.json(update_data)
+# openai_chat = OpenAIChat()
 
-    if st.button("Logout"):
-        st.session_state.authenticated = False
-        st.experimental_rerun()
-else:
-    username = st.text_input("Username")
-    password = st.text_input("Password", type="password")
+async def fun():
+    await collectDataTodb.collect_telegram("@trending")
+    await generator.telegram.client.start()
+    await generator.get_generate_teleg_save_mesg()
+    await generator.telegram.client.disconnect()
 
-    if st.button("Login"):
-        if authenticate(username, password):
-            st.session_state.authenticated = True
-            st.session_state.username = username
-            st.success("Login successful")
-            st.experimental_rerun()
-        else:
-            st.error("Username or password is incorrect")
+
+
+
+while  True :
+#     # Twitter.sendMessage(payload=payload)
+#     # TeleClient.run()
+#     # Twitter.listen_to_tweets()
+#     # for i in range(100):
+#     #   firestore_client.set_document(f"alovelace+{i}", {"first": "Ada", "last": "Lovelace", "born": 1815})
+      
+
+    asyncio.run(fun())
+    time.sleep(200)
+#     # openai_chat.set_system_message("You are a helpful assistant.")
+    # response, tokens_used = openai_chat.get_response("Hello, how are you?")
+    # print("Response:", response)
+    # print("Tokens used:", tokens_used)
+
+  
+    # Get a document
+    # doc_data = firestore_client.get_document("alovelace")
+    
+    # Update a document
+    # firestore_client.update_document("alovelace", {"last": "Byron"})
+    # print(doc_data)
+    # Delete a document
+    # firestore_client.delete_document("alovelace")
+    
+  

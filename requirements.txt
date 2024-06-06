@@ -2,5 +2,9 @@
 telethon
 python-dotenv
 pytest
-streamlit
-streamlit_authenticator
+PyYAML
+requests_oauthlib
+requests
+firebase_admin
+openai
+
