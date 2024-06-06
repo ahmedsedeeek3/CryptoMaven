@@ -1,14 +1,18 @@
 import logging
-from telethon import TelegramClient, events
-from dotenv import load_dotenv
+import asyncio
 import os
+from dotenv import load_dotenv
+from telethon import TelegramClient, errors
+from telethon.tl.types import MessageMediaPhoto
 from utils.logging.logginconfig import setup_logger
+from utils.db_connectors.firbase import FirebaseClient
+
 # Load environment variables from a .env file
 load_dotenv()
 
 # Constants for Telegram API
-API_ID = int(os.getenv("AP_id"))
-API_HASH = os.getenv("App_api_hash")
+API_ID = int(os.getenv("API_ID"))
+API_HASH = os.getenv("API_HASH")
 
 if not API_ID or not API_HASH:
     print("Issue with keys: API_ID and/or API_HASH are not set properly.")
@@ -17,87 +21,68 @@ if not API_ID or not API_HASH:
 # Set up logging
 logger = setup_logger(__name__)
 
-# Initialize user account to listen to various bots or chats
-class TelegramUserListener:
-    def __init__(self, session_name, api_id, api_hash, target_bot_username):
+class TelegramUserClient:
+    def __init__(self,session_name, api_id, api_hash):
         # Initialize the Telegram client
         self.client = TelegramClient(session_name, api_id, api_hash)
-        self.target_bot_username = target_bot_username
-
+        
+        
+        
     async def start(self):
         # Start the Telegram client
-        await self.client.start()
-        logger.info("Telegram client started.")
-        
-        
-
-
-        # Add an event handler for new messages
-        # self.client.add_event_handler(self.message_handler_async, events.NewMessage)
-        # logger.info("Event handler added.")
-
-        # Read the last 12 messages from a specific chat
-        await self.read_messages_patches(limit=12)
-
-    async def read_messages_patches(self, limit=12):
-        # Asynchronously read the last {limit} messages from the specified chat
-        message_list = []
-        async for message in self.client.iter_messages(self.target_bot_username, limit=limit):
-            logger.info(f"Message from {message.sender_id}:{message}")
-            message_list.append(message)
-        
-        return message_list   
-        
+        if not self.client.is_connected():
+            await self.client.start()
+            logger.info("Telegram client started.")
+        else:
+            logger.info("Telegram client already connected.")
     
-    #conect db and save messages for further action 
-        #########
-        ##missed block
-        #########
-            
-
-
-
-    async def message_handler_async(self, event):
-        # Receive new messages from a specific bot username in real-time
-        if event.message.sender_id == self.target_bot_username:
-            logger.info(f"Message from {self.target_bot_username}: {event.message.text}")
-
-    def run(self):
-        # Run the main function with the client
-        with self.client:
-            logger.info("Running the Telegram client.")
-            self.client.loop.run_until_complete(self.start())
-
-TeleClient = TelegramUserListener(session_name="reader",
-                                  api_id=API_ID,
-                                  api_hash=API_HASH,
-                                  target_bot_username="@trending")
-
-TeleClient.run()
-
-
-class SendMessage:
-    def __init__(self, session_name, api_id, api_hash):
-        # Initialize the Telegram client
-        self.client = TelegramClient(session_name, api_id, api_hash)
-
-    async def start(self):
-        # Start the Telegram client
-        await self.client.start()
-        logger.info("Telegram client started.")
 
     async def send_message(self, target_username, message):
-        # Send a message to the specified username
-        await self.client.send_message(target_username, message)
-        logger.info(f"Sent message to {target_username}: {message}")
+        # Send a message to the specified chat or user
+        if not self.client.is_connected():
+            await self.client.start()
+        
+        try:
+            entity = await self.client.get_entity(target_username)
+            await self.client.send_message(entity, message)
+            logger.info(f"Message sent to {target_username}: {message}")
+        except errors.UsernameNotOccupiedError:
+            logger.error(f"Username {target_username} is not occupied. Please check the username.")
+        except Exception as e:
+            logger.error(f"Failed to send message to {target_username}: {str(e)}")
 
-    def run(self, target_username, message):
-        # Run the main function with the client
-        with self.client:
-            logger.info("Running the Telegram client.")
-            self.client.loop.run_until_complete(self._run(target_username, message))
 
-    async def _run(self, target_username, message):
-        # Start the client and send the message
+    
+    async def stop(self):
+        # Stop the Telegram client
+        if self.client.is_connected():
+            await self.client.disconnect()
+            logger.info("Telegram client stopped.")
+        else:
+            logger.info("Telegram client was not connected.")
+
+
+
+    async def download_photo(self, media):
+        file_path = await self.client.download_media(media)
+        return file_path
+
+   
+   
+    async def read_recent_messages(self,target_chat_username, limit=12):
+        # Asynchronously read the last {limit} messages from the specified chat
         await self.start()
-        await self.send_message(target_username, message)
+       
+        messages_dict_list = []
+        async for message in self.client.iter_messages(target_chat_username, limit=limit):
+            logger.info(f"Message from {message.sender_id} content: {message.message}")
+            message_dict = message.to_dict()
+            message_dict['id'] = message.id 
+            messages_dict_list.append(message_dict)
+        
+        # await self.client.run_until_disconnected()
+        return  messages_dict_list   
+
+    
+      
+

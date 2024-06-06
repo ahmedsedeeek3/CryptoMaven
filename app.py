@@ -1,87 +1,56 @@
-import streamlit as st
-import bcrypt
-import yaml
-from yaml.loader import SafeLoader
+import os
+import time
+import asyncio
+from dotenv import load_dotenv
+from utils.db_connectors.firbase import FirebaseClient
+from utils.social_conctors.telegramUser import TelegramUserClient
+from utils.ai_connectors.open_ai import OpenAIChat
+from domain.dataGen.openaigen import OpenAIGen
+from domain.dataCollecting.collect_data import CollectDataTodb
+from domain.publishing.scheduled import SchaduledMessage
+load_dotenv()
 
-# Define a function to check passwords
-def check_password(password, hashed):
-    return bcrypt.checkpw(password.encode(), hashed.encode())
+# Constants for Telegram API
+API_ID = int(os.getenv("API_ID"))
+API_HASH = os.getenv("API_HASH")
+# x.com
+consumer_key = os.environ.get("API_KEY")
+consumer_secret = os.environ.get("API_SECRET_KEY")
+bearer_token = os.environ.get("BEARER_TOKEN")
 
-# Load the users from the yaml file
-with open('config.yaml') as file:
-    users = yaml.load(file, Loader=SafeLoader)
+#  target_chat_username="@trending"
 
-# Authentication function
-def authenticate(username, password):
-    if username in users and check_password(password, users[username]["password"]):
-        return True
-    return False
+# clints init
+telegram_client = TelegramUserClient(session_name="reader",
+                                  api_id=API_ID,
+                                  api_hash=API_HASH,
+                                 )
 
-# Streamlit app
-st.title("Login")
 
-# Session state to keep track of login status
-if "authenticated" not in st.session_state:
-    st.session_state.authenticated = False
 
-if st.session_state.authenticated:
-    st.success(f"Welcome {users[st.session_state.username]['name']}!")
+firbase_clint = FirebaseClient(app_name="missionx",collection_name="telegramMessages")
+open_ai_chat_client = OpenAIChat()
 
-    st.title("Streamlit App")
+# domain clint 
+schaduledMessage = SchaduledMessage(telegram_client = telegram_client ,firbase_client = firbase_clint)
+collectDataTodb = CollectDataTodb(firbase_client=firbase_clint,telegram_clint=telegram_client)
+openAiGenerator = OpenAIGen(openai_clint=open_ai_chat_client,firbase_clint=firbase_clint)
 
-    st.header("Create a new item")
-    name = st.text_input("Item name")
-    price = st.number_input("Item price", min_value=0.0, step=0.01)
-    is_offer = st.checkbox("Is offer?")
+# 1-get messages fom telgram ----> the generat over it 
 
-    if st.button("Create Item"):
-        item_data = {
-            "name": name,
-            "price": price,
-            "is_offer": is_offer
-        }
-        st.success("Item created successfully!")
-        st.json(item_data)
+# operations :
 
-    st.header("Get item details")
-    item_id = st.number_input("Item ID", min_value=1, step=1)
-    query = st.text_input("Query parameter (optional)")
 
-    if st.button("Get Item"):
-        item_data = {
-            "item_id": item_id,
-            "query": query
-        }
-        st.success("Item retrieved successfully!")
-        st.json(item_data)
 
-    st.header("Update an item")
-    update_item_id = st.number_input("Item ID to update", min_value=1, step=1)
-    update_name = st.text_input("Updated item name")
-    update_price = st.number_input("Updated item price", min_value=0.0, step=0.01)
-    update_is_offer = st.checkbox("Is offer?", key="update_is_offer")
 
-    if st.button("Update Item"):
-        update_data = {
-            "name": update_name,
-            "price": update_price,
-            "is_offer": update_is_offer
-        }
-        st.success("Item updated successfully!")
-        st.json(update_data)
+#testing 
 
-    if st.button("Logout"):
-        st.session_state.authenticated = False
-        st.experimental_rerun()
-else:
-    username = st.text_input("Username")
-    password = st.text_input("Password", type="password")
-
-    if st.button("Login"):
-        if authenticate(username, password):
-            st.session_state.authenticated = True
-            st.session_state.username = username
-            st.success("Login successful")
-            st.experimental_rerun()
-        else:
-            st.error("Username or password is incorrect")
+async def main ():
+    while True:
+        await collectDataTodb.collect_telegram_byChanel_to_db(target_chat_username="@trending")
+        newMessage = openAiGenerator.get_generate_teleg_savedb() 
+        if newMessage :
+        #  if new message is retrived the newly genrated message  
+         await schaduledMessage.send_teleg_mesg_from_db()
+        time.sleep(10)
+asyncio.run(main())   
