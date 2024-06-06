@@ -42,10 +42,16 @@ class TelegramUserClient:
         if not self.client.is_connected():
             await self.client.start()
         
+
+        MAX_MESSAGE_LENGTH = 4096
+        message_parts = [message[i:i + MAX_MESSAGE_LENGTH] for i in range(0, len(message), MAX_MESSAGE_LENGTH)]
+        
+
         try:
             entity = await self.client.get_entity(target_username)
-            await self.client.send_message(entity, message)
-            logger.info(f"Message sent to {target_username}: {message}")
+            for msg in message_parts:
+                await self.client.send_message(entity, msg)
+                logger.info(f"Message sent to {target_username}: {message}")
         except errors.UsernameNotOccupiedError:
             logger.error(f"Username {target_username} is not occupied. Please check the username.")
         except Exception as e:
