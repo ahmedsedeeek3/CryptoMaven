@@ -52,5 +52,5 @@ async def main ():
         if newMessage :
         #  if new message is retrived the newly genrated message  
          await schaduledMessage.send_teleg_mesg_from_db()
-        time.sleep(10)
+        time.sleep(120)
 asyncio.run(main())   
