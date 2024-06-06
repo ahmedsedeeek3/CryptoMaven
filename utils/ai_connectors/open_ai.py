@@ -22,6 +22,9 @@ class OpenAIChat:
         self.system_message = None
         logging.info("OpenAI client initialized successfully.")
 
+
+
+
     def set_system_message(self, system_message: str):
         """
         Set the system message that will define the AI's role or behavior.
@@ -29,7 +32,10 @@ class OpenAIChat:
         self.system_message = system_message
         logging.info(f"System message set to: {system_message}")
 
-    async def get_response(self, user_message: str):
+    
+    
+    
+    def get_response(self, user_message: str):
         """
         Get a response from the AI based on the user's message and the system's role (if set).
         """
@@ -61,9 +67,3 @@ class OpenAIChat:
             logging.error(f"Error getting response from OpenAI: {e}")
             raise
 
-# Example usage:
-# openai_chat = OpenAIChat()
-# openai_chat.set_system_message("You are a helpful assistant.")
-# response, tokens_used = openai_chat.get_response("Hello, how are you?")
-# print("Response:", response)
-# print("Tokens used:", tokens_used)

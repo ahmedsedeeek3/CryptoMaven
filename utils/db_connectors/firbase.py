@@ -4,7 +4,6 @@ import firebase_admin
 from firebase_admin import credentials, firestore, storage
 from utils.logging.logginconfig import setup_logger
 from datetime import datetime
-from telethon.tl.types import PeerChannel
 
 logger = setup_logger(__name__)
 
@@ -120,7 +119,7 @@ class FirebaseClient:
             logger.error(f"Error uploading photo {file_path}: {e}")
             return None
 
-    def save_message_to_firestore(self, message, photo_path, img):
+    def save_message_to_firestore(self, message):
         """
         Save a message to Firestore, including an optional photo URL.
 
@@ -131,30 +130,13 @@ class FirebaseClient:
         try:
             doc_id = str(message['id'])
             data = {
-                "go_publish": True,
-                "ai": False,
-                "ai_teleg_completed": False,
-                "ai_twitter_completed": False,
-                "ai_twitch_completed": False,
-                "ai_telegram_marketing_completed": False,
-                "ai_teleg_completed": False,
-                "ai_message_telegram_bot": "",
-                "ai_message_twitter": "",
-                "ai_message_twitch": "",
-                "ai_message_telegram_marketing": "",
-                "img": img,
-                "img_url": photo_path,
-                "published_tel": False,
-                "published_twitter": False,
-                "published_twitch": False,
-                "published_marketing": False,
+                "ai": False,  
                 'date': message['date'].isoformat(),
                 'message': message['message'],
-                'out': message['out'],
                 'pinned': message['pinned'],
                 'views': message.get('views', 0),
                 'ttl_period': message.get('ttl_period', None),
-                'photo_url': photo_path
+                
             }
 
             self.db.collection(self.collection_name).document(doc_id).set(data)
@@ -162,6 +144,9 @@ class FirebaseClient:
         except Exception as e:
             logger.error(f"Error saving message {message} to Firestore: {e}")
 
+    
+    
+    
     def get_documents_where_ai_is_false(self):
         """
         Get all documents where the 'ai' field is False.
@@ -182,3 +167,29 @@ class FirebaseClient:
         except Exception as e:
             logger.error(f"Error querying documents where 'ai' is False: {e}")
             return []
+        
+
+
+
+    def get_documents_where_sent_is_false_telg(self):
+        
+        """
+        Get all documents where the 'sent' field is False.
+
+        :return: A list of documents where 'ai' is False.
+        """
+        try:
+            query = self.db.collection("teleg").where('sent', '==', False)
+            docs = query.stream()
+            results = []
+            for doc in docs:
+                doc_dict = doc.to_dict()
+                doc_dict['id'] = doc.id  # Add the document ID to the dictionary
+                results.append(doc_dict)
+           
+            logger.info(f"Retrieved {len(results)} documents where 'ai' is False.")
+            return results
+        except Exception as e:
+            logger.error(f"Error querying documents where 'ai' is False: {e}")
+            return []
+

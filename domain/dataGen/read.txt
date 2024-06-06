@@ -1,1 +1,5 @@
 generating data form colected data which saved on db
+
+MAX_MESSAGE_LENGTH = 4096
+        response_parts = [response[0][i:i + MAX_MESSAGE_LENGTH] for i in range(0, len(response[0]), MAX_MESSAGE_LENGTH)]
+        

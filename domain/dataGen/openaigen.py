@@ -1,9 +1,6 @@
 import os
-import asyncio
+
 from utils.logging.logginconfig import setup_logger
-from utils.db_connectors.firbase import FirebaseClient
-from utils.ai_connectors.open_ai import OpenAIChat
-from utils.social_conctors.telegramUser import TelegramUserListener
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -13,15 +10,18 @@ API_HASH = os.getenv("API_HASH")
 logging = setup_logger(__name__)
 
 class OpenAIGen:
-    def __init__(self) -> None:
-        self.openAi = OpenAIChat()
-        self.firebase_client_teleg = FirebaseClient(app_name="missionx", 
-                                                    collection_name="telegramMessages")
-        self.telegram = TelegramUserListener(session_name="reader",
-                                             api_id=API_ID,
-                                             api_hash=API_HASH,
-                                             target_chat_username="@trending")
+    def __init__(self,openai_clint,firbase_clint) -> None:
+        self.openAi = openai_clint
+        self.firebase_client_teleg = firbase_clint
 
+        # self.openAi = OpenAIChat()
+        # self.firebase_client_teleg = FirebaseClient(app_name="missionx", 
+        #                                             collection_name="telegramMessages")
+        
+        '''
+        respos:call db for (not AI) not yet reviesed and genrat differen
+        messages for differen targets 
+        '''
         self.collection_nameing = {
             "teleg": "teleg",
         }
@@ -43,9 +43,12 @@ class OpenAIGen:
                     '''
         }
 
-    async def get_generate_teleg_save_mesg(self):
+    def get_generate_teleg_savedb(self):
         self.openAi.set_system_message(self.sysROlPrombet.get("teleg"))
         docs = self.firebase_client_teleg.get_documents_where_ai_is_false()
+        if len(docs)== 0 :
+            logging.warning(msg="ERRO doc retrived with ai false len is 0")
+            return False
         msgs = ""
         last_doc_id = None
 
@@ -61,6 +64,7 @@ class OpenAIGen:
                 if not message:
                     continue
                 
+                # [ai] TO [TRUE] indicating revised  
                 ref = self.firebase_client_teleg.db.collection("telegramMessages").document(doc_id)
                 ref.update({"ai": True})
                 msgs += message
@@ -69,32 +73,23 @@ class OpenAIGen:
                 logging.error(f"Error processing document {doc.get('id', 'unknown')}: {e}")
         
         logging.info(f"Total messages: {msgs}")
-        response = await self.openAi.get_response(msgs)
+        response = self.openAi.get_response(msgs)
 
         # Split message if it exceeds Telegram's character limit
-        MAX_MESSAGE_LENGTH = 4096
-        response_parts = [response[i:i + MAX_MESSAGE_LENGTH] for i in range(0, len(response), MAX_MESSAGE_LENGTH)]
-        
-        for part in response_parts:
-            try:
-                await self.telegram.send_message("@cryptoMissionX", part)
-                logging.info(f"Message sent to @cryptoMissionX: {part}")
-            except Exception as e:
-                logging.error(f"Failed to send message to @cryptoMissionX: {e}")
         
         doc = {
-            "ai_message": response,
+            "ai_message": response[0],
+            "used_token":response[1],
             "source": msgs,
             "sent": False
         }
-        self.firebase_client_teleg.db.collection(self.collection_nameing.get("teleg", "")).add(doc)
-        if last_doc_id:
-            logging.info(f"Updated document {last_doc_id} with AI response.")
+        try:
 
-async def main():
-    generator = OpenAIGen()
-    async with generator.telegram.client:
-        await generator.get_generate_teleg_save_mesg()
+            self.firebase_client_teleg.db.collection(self.collection_nameing.get("teleg", "")).add(doc)
+            logging.info(f"doc add to db {doc}")
+            return True
+        except Exception as e:
+           
+            logging.info(f"error adding document to db {e}")
 
-if __name__ == "__main__":
-    asyncio.run(main())
+        
