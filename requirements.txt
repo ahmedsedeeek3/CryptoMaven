@@ -7,4 +7,5 @@ requests_oauthlib
 requests
 firebase_admin
 openai
+urllib3
 
