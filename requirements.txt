@@ -1,0 +1,10 @@
+
+telethon
+python-dotenv
+pytest
+PyYAML
+requests_oauthlib
+requests
+firebase_admin
+openai
+
