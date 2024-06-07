@@ -176,7 +176,7 @@ class FirebaseClient:
         """
         Get all documents where the 'sent' field is False.
 
-        :return: A list of documents where 'ai' is False.
+        :return: A list of documents where  'sent' is False.
         """
         try:
             query = self.db.collection("teleg").where('sent', '==', False)
@@ -186,6 +186,10 @@ class FirebaseClient:
                 doc_dict = doc.to_dict()
                 doc_dict['id'] = doc.id  # Add the document ID to the dictionary
                 results.append(doc_dict)
+                doc_ref = self.db.collection("teleg").document(doc.id)
+                doc_ref.update({
+                    'sent':True
+                })
            
             logger.info(f"Retrieved {len(results)} documents where 'ai' is False.")
             return results

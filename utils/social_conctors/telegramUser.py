@@ -37,27 +37,38 @@ class TelegramUserClient:
             logger.info("Telegram client already connected.")
     
 
-    async def send_message(self, target_username, message):
-        # Send a message to the specified chat or user
-        if not self.client.is_connected():
-            await self.client.start()
-        
 
+    async def async_iterable(self,my_list):
+        for item in my_list:
+            yield item
+
+
+    async def send_messages(self, target_username, message):
+        logger.info(f"Attempting to send message to {target_username}: {message}")
+        
+        if not isinstance(message, str):
+            logger.error(f"Message is not a string: {message}")
+            return
+        
         MAX_MESSAGE_LENGTH = 4096
         message_parts = [message[i:i + MAX_MESSAGE_LENGTH] for i in range(0, len(message), MAX_MESSAGE_LENGTH)]
         
+        async_message_parts =self.async_iterable(message_parts)
+
+
+        if not self.client.is_connected():
+            await self.client.start()
 
         try:
             entity = await self.client.get_entity(target_username)
-            for msg in message_parts:
-                await self.client.send_message(entity, msg)
-                logger.info(f"Message sent to {target_username}: {message}")
+            async for part in async_message_parts:
+                await self.client.send_message(entity, part)
+                logger.info(f"Message part sent to {target_username}: {part}")
         except errors.UsernameNotOccupiedError:
             logger.error(f"Username {target_username} is not occupied. Please check the username.")
         except Exception as e:
             logger.error(f"Failed to send message to {target_username}: {str(e)}")
-
-
+        
     
     async def stop(self):
         # Stop the Telegram client

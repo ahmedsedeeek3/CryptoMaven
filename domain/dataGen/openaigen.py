@@ -48,7 +48,7 @@ class OpenAIGen:
         docs = self.firebase_client_teleg.get_documents_where_ai_is_false()
         if len(docs)== 0 :
             logging.warning(msg="ERRO doc retrived with ai false len is 0")
-            return False
+            
         msgs = ""
         last_doc_id = None
 
@@ -87,7 +87,7 @@ class OpenAIGen:
 
             self.firebase_client_teleg.db.collection(self.collection_nameing.get("teleg", "")).add(doc)
             logging.info(f"doc add to db {doc}")
-            return True
+            
         except Exception as e:
            
             logging.info(f"error adding document to db {e}")

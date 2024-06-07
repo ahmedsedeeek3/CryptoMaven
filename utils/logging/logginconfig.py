@@ -6,7 +6,7 @@ def setup_logger(name):
     """
     # Configure the logger
     logging.basicConfig(
-        level=logging.WARNING,
+        level=logging.INFO,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
         handlers=[
             logging.FileHandler("telegram_bot.log"),  # Log to a file
