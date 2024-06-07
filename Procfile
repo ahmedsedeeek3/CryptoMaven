@@ -1,3 +1,8 @@
-web: streamlit run app.py --server.port $PORT --server.address 0.0.0.0
+buildpacks:
+  - heroku/python
+  - digitalocean/hugo
+  - digitalocean/procfile
+
+web: pip install -r requirements.txt && hugo server
 
 
