@@ -55,7 +55,6 @@ async def collect_telegram_data():
         logging.info("Starting to collect Telegram data...")
         await collectDataTodb.collect_telegram_byChanel_to_db(target_chat_username="@trending")
         logging.info("Finished collecting Telegram data.")
-        await asyncio.sleep(30)
     except Exception as e:
         logging.error(f"Error in collect_telegram_byChanel_to_db: {e}")
 
@@ -72,16 +71,17 @@ async def send_telegram_messages():
         logging.info("Starting to send Telegram messages from DB...")
         await schaduledMessage.send_teleg_mesg_from_db()
         logging.info("Finished sending Telegram messages from DB.")
-        await asyncio.sleep(30)
     except Exception as e:
         logging.error(f"Error in send_teleg_mesg_from_db: {e}")
 
 async def main_loop():
     while True:
         await collect_telegram_data()
+        await asyncio.sleep(10)
         generate_telegram_data()  # No await needed
         await asyncio.sleep(10)  # Added a short delay between tasks to ensure smooth execution
         await send_telegram_messages()
+        await asyncio.sleep(10)
 
 if __name__ == "__main__":
     asyncio.run(main_loop())
