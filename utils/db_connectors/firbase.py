@@ -19,6 +19,7 @@ class FirebaseClient:
         if not hasattr(self, 'initialized') or not self.initialized:
             self._initialize_firebase(app_name, collection_name)
             self.initialized = True
+            
 
     def _initialize_firebase(self, app_name, collection_name):
         self.credentials_json = os.getenv("FIREBASE_CREDENTIALS_JSON")
@@ -40,6 +41,8 @@ class FirebaseClient:
         self.bucket = storage.bucket(name='mytestagent-1ab6f.appspot.com', app=self.app)
         self.collection_name = collection_name
         
+    
+    
     def set_document(self, doc_id, data):
         """
         Set the data for a specified document in the Firestore collection.
@@ -53,6 +56,18 @@ class FirebaseClient:
             logger.info(f"Document {doc_id} set with data: {data}")
         except Exception as e:
             logger.error(f"Error setting document {doc_id}: {e}")
+
+
+    def add_document(self,collection,data):
+         
+        try:
+            doc_ref = self.db.collection(collection).add(data)
+            
+            logger.info(f"Document {doc_ref} set with data: {data}")
+        except Exception as e:
+            logger.error(f"Error adding document {doc_ref}: {e}")
+
+
 
     def get_document(self, doc_id):
         """
@@ -75,12 +90,7 @@ class FirebaseClient:
             return None
 
     def update_document(self, doc_id, data):
-        """
-        Update the data for a specified document in the Firestore collection.
-
-        :param doc_id: Document ID.
-        :param data: Dictionary containing the data to be updated in the document.
-        """
+        
         try:
             doc_ref = self.db.collection(self.collection_name).document(doc_id)
             doc_ref.update(data)
@@ -89,11 +99,7 @@ class FirebaseClient:
             logger.error(f"Error updating document {doc_id}: {e}")
 
     def delete_document(self, doc_id):
-        """
-        Delete a specified document from the Firestore collection.
-
-        :param doc_id: Document ID.
-        """
+       
         try:
             doc_ref = self.db.collection(self.collection_name).document(doc_id)
             doc_ref.delete()
@@ -102,12 +108,7 @@ class FirebaseClient:
             logger.error(f"Error deleting document {doc_id}: {e}")
 
     async def upload_photo_to_firebase(self, file_path):
-        """
-        Upload a photo to Firebase Storage.
-
-        :param file_path: Path to the photo file.
-        :return: URL of the uploaded photo.
-        """
+        
         try:
             blob = self.bucket.blob(os.path.basename(file_path))
             blob.upload_from_filename(file_path)
@@ -119,14 +120,10 @@ class FirebaseClient:
             logger.error(f"Error uploading photo {file_path}: {e}")
             return None
 
-    def save_message_to_firestore(self, message):
-        """
-        Save a message to Firestore, including an optional photo URL.
 
-        :param message: Telegram message object.
-        :param photo_path: Path to the uploaded photo.
-        :param img: Image data to be saved.
-        """
+
+    def save_telg_message_to_firestore(self, message):
+        #save teleg mesgs if not exist 
         try:
             doc_id = str(message['id'])
             data = {
@@ -139,7 +136,8 @@ class FirebaseClient:
                 
             }
 
-            self.db.collection(self.collection_name).document(doc_id).set(data)
+            # self.db.collection(self.collection_name).document(doc_id).set(data)
+            self.create_document_if_not_exists(doc_id=doc_id,data=data)  
             logger.info(f"Message {doc_id} saved to Firestore.")
         except Exception as e:
             logger.error(f"Error saving message {message} to Firestore: {e}")
@@ -147,14 +145,16 @@ class FirebaseClient:
     
     
     
-    def get_documents_where_ai_is_false(self):
+    def get_documents_where_ai_is_false(self,collection_name="telegramMessages"):
         """
         Get all documents where the 'ai' field is False.
 
         :return: A list of documents where 'ai' is False.
         """
+
         try:
-            query = self.db.collection(self.collection_name).where('ai', '==', False)
+            query = self.db.collection(collection_name).where('ai', '==', False)
+            logger.info(f"query {query}")
             docs = query.stream()
             results = []
             for doc in docs:
@@ -162,7 +162,10 @@ class FirebaseClient:
                 doc_dict['id'] = doc.id  # Add the document ID to the dictionary
                 results.append(doc_dict)
            
-            logger.info(f"Retrieved {len(results)} documents where 'ai' is False.")
+            logger.info(f"Retrieved {len(results)} documents--> {collection_name}--> where 'ai' is False.")
+            if len(results) == 0:
+               logger.warn(f"Retrieved  0 mesages ")
+
             return results
         except Exception as e:
             logger.error(f"Error querying documents where 'ai' is False: {e}")
@@ -196,4 +199,100 @@ class FirebaseClient:
         except Exception as e:
             logger.error(f"Error querying documents where 'ai' is False: {e}")
             return []
+
+    
+    def create_document_if_not_exists(self,doc_id, data):
+        doc_ref = self.db.collection(self.collection_name).document(doc_id)
+        try:
+            transaction = self.db.transaction()
+            @firestore.transactional
+            def transactional_create(transaction, doc_ref):
+                snapshot = doc_ref.get(transaction=transaction)
+                if not snapshot.exists:
+                    transaction.set(doc_ref, data)
+                else:
+                    logger.info('Document already exists')
+            transactional_create(transaction, doc_ref)
+            logger.info('Document successfully created!')
+        except Exception as e:
+            logger.warning(f'Transaction failed: {e}')
+
+    # schudel
+    def create_schudel_time(self, data):
+        try:
+            doc_ref = self.db.collection("schudel").add(data)
+            logger.info('Schudel document successfully created!')
+        except Exception as e:
+            logger.warning(f'Transaction failed: {e}')
+
+    def get_scheduled_msgs_not_sent(self):
+        try:
+            query = self.db.collection("schudel").where('sent', '==', False)
+            docs = query.stream()
+            results = []
+            for doc in docs:
+                doc_dict = doc.to_dict()
+                doc_dict['id'] = doc.id  # Add the document ID to the dictionary
+                results.append(doc_dict)
+
+            logger.info(f"Retrieved {len(results)} documents where 'sent' is False.")
+            if len(results) == 0:
+                logger.warning("Retrieved 0 messages")
+
+            return results
+        except Exception as e:
+            logger.error(f"Error querying documents where 'sent' is False: {e}")
+            return []
+
+    def set_scheduled_msg_as_sent(self, doc_id):
+        try:
+            doc_ref = self.db.collection("schudel").document(doc_id)
+            doc = doc_ref.get()
+            if not doc.exists:
+                logger.warning(f"No document found with ID: {doc_id}")
+            else:
+                doc_ref.update({
+                    'sent': True
+                })
+                logger.info(f"Document with ID {doc_id} marked as sent.")
+        except Exception as e:
+            logger.error(f"Error updating document with ID {doc_id}")
+
+# token Metrics
+            
+   
+
+
+   
+
+
+
+
+
+    def get_token_metrics_documents_where_sent_is_false_telg(self):
+        
+        """
+        Get all documents where the 'sent' field is False.
+
+        :return: A list of documents where  'sent' is False.
+        """
+        try:
+            query = self.db.collection("teleg").where('sent', '==', False)
+            docs = query.stream()
+            results = []
+            for doc in docs:
+                doc_dict = doc.to_dict()
+                doc_dict['id'] = doc.id  # Add the document ID to the dictionary
+                results.append(doc_dict)
+                doc_ref = self.db.collection("teleg").document(doc.id)
+                doc_ref.update({
+                    'sent':True
+                })
+           
+            logger.info(f"Retrieved {len(results)} documents where 'ai' is False.")
+            return results
+        except Exception as e:
+            logger.error(f"Error querying documents where 'ai' is False: {e}")
+            return []    
+
 

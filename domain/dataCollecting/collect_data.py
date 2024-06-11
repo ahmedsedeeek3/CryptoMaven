@@ -15,8 +15,7 @@ class CollectDataTodb:
             messages_dict_list = await self.telegram_clint.read_recent_messages(target_chat_username)
             
             for msg in  messages_dict_list:
-                self.firbase_client.save_message_to_firestore(msg)
- 
+                self.firbase_client.save_telg_message_to_firestore(msg)
         except Exception as e:
             logger.error(f"Failed to recive message  {e}")
          

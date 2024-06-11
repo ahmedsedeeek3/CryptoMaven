@@ -86,7 +86,7 @@ class TelegramUserClient:
 
    
    
-    async def read_recent_messages(self,target_chat_username, limit=12):
+    async def read_recent_messages(self,target_chat_username, limit=20):
         # Asynchronously read the last {limit} messages from the specified chat
         await self.start()
        
@@ -94,7 +94,8 @@ class TelegramUserClient:
         async for message in self.client.iter_messages(target_chat_username, limit=limit):
             logger.info(f"Message from {message.sender_id} content: {message.message}")
             message_dict = message.to_dict()
-            message_dict['id'] = message.id 
+            message_dict['id'] = message.id
+            message_dict['chanel'] = target_chat_username
             messages_dict_list.append(message_dict)
         
         # await self.client.run_until_disconnected()

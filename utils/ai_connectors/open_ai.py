@@ -54,7 +54,11 @@ class OpenAIChat:
             # Send the messages to the OpenAI API and get the response
             chat_completion = self.client.chat.completions.create(
                     model="gpt-3.5-turbo",
-                    messages = messages
+                    messages = messages,
+                    temperature=0.0,
+                    top_p=1.0,
+                    frequency_penalty=0.0,
+                    presence_penalty=0.0
                 )
             
             # Extract the AI's reply from the response
