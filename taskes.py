@@ -68,7 +68,8 @@ def collect_sentiments_data_Tokenmetrics_to_db():
 def genrat_sentiments_data_Tokenmetrics_to_db():
     try:
         logging.info("Starting to collect Telegram data...")
-        openAiGenerator.generate_coin_metric_sentims_savedb()
+        openAiGenerator.generate_coin_metric_sentims_savedb_step1()
+        openAiGenerator.sentiment_to_db_from_db_step2()
         logging.info("Finished collecting Telegram data.")
     except Exception as e:
         logging.error(f"Error in generate_coin_metric_sentims_savedb: {e}")
@@ -106,28 +107,4 @@ async def send_telegram_messages_from_db():
         logging.info("Finished sending Telegram messages from DB.")
     except Exception as e:
         logging.error(f"Error in send_teleg_mesg_from_db: {e}")
-
-
-
-
-
-# import os
-# import requests
-# from utils.logging.logginconfig import setup_logger
-# from dotenv import load_dotenv
-
-# load_dotenv()
-
-
-
-# url = "https://api.tokenmetrics.com/v2/sentiments?limit=1000&page=0"
-
-# headers = {
-#     "accept": "application/json",
-#     "api_key": os.getenv("TOKEN_MATRIKS") 
-# }
-
-# response = requests.get(url, headers=headers)
-
-# print(response.text)
 

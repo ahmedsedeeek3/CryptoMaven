@@ -174,22 +174,17 @@ class FirebaseClient:
 
 
 
-    def get_documents_where_sent_is_false_telg(self):
+    def get_documents_where_sent_is_false(self,collection_name="teleg" ):
         
-        """
-        Get all documents where the 'sent' field is False.
-
-        :return: A list of documents where  'sent' is False.
-        """
         try:
-            query = self.db.collection("teleg").where('sent', '==', False)
+            query = self.db.collection(collection_name).where('sent', '==', False)
             docs = query.stream()
             results = []
             for doc in docs:
                 doc_dict = doc.to_dict()
                 doc_dict['id'] = doc.id  # Add the document ID to the dictionary
                 results.append(doc_dict)
-                doc_ref = self.db.collection("teleg").document(doc.id)
+                doc_ref = self.db.collection(collection_name).document(doc.id)
                 doc_ref.update({
                     'sent':True
                 })
@@ -200,7 +195,10 @@ class FirebaseClient:
             logger.error(f"Error querying documents where 'ai' is False: {e}")
             return []
 
-    
+
+
+
+
     def create_document_if_not_exists(self,doc_id, data):
         doc_ref = self.db.collection(self.collection_name).document(doc_id)
         try:
