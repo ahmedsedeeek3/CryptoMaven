@@ -246,7 +246,7 @@ class OpenAIGen:
 
                     mesg = doc.get('ai_message')
                     if not mesg:
-                        logging.error(f"Error ai_message not found ")
+                        logging.error("Error ai_message not found ")
                         continue
                     all_messages_list.append(mesg)
                     logging.info(f"Message from DB: {mesg}")
@@ -290,7 +290,7 @@ class OpenAIGen:
                 # 5. Store each message in the next collection and prepare for sending
                 coll_name = collections_names.get("ready_to_sent_st2")
                 self.firebase_client.db.collection(coll_name).add(mesg)
-                logging.info(f"Message added to DB: ")
+                logging.info("Message added to DB: ")
             except Exception as e:
                 logging.error(f"Error storing messages in the database: {e}")
            

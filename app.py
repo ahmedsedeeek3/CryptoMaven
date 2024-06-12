@@ -7,6 +7,7 @@ from taskes import collect_sentiments_data_Tokenmetrics_to_db
 from taskes import genrat_sentiments_data_Tokenmetrics_to_db
 from taskes import generate_telegram_data_db
 from taskes import send_telegram_messages_from_db
+from taskes import send_teleg_mesg_from_coinmatric_sementim_db
 # "@trending"
 # Define the asynchronous task function
 async def job_15_min():
@@ -22,6 +23,8 @@ async def job_15_min():
     # # testing-->
     collect_sentiments_data_Tokenmetrics_to_db()
     genrat_sentiments_data_Tokenmetrics_to_db()
+    await send_teleg_mesg_from_coinmatric_sementim_db()
+
 
 async def job_20_min():
     collect_sentiments_data_Tokenmetrics_to_db()

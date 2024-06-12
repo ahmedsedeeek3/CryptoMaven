@@ -36,12 +36,12 @@ class SchaduledMessage:
         add them to schudel 
         '''
         try:
-         mesgs = self.firbase_client.get_documents_where_sent_is_false_telg()
+         mesgs = self.firbase_client.get_documents_where_sent_is_false()
         
         except Exception as e :
          logger.error(f"Error : get_documents_where_sent_is_false_telg {e} ")
         if len(mesgs) == 0 : 
-                logger.error(f"Error : get_documents_where_sent_is_false_telg return 0 ")
+                logger.error("Error : get_documents_where_sent_is_false_telg return 0 ")
                 return
         
         
@@ -67,17 +67,17 @@ class SchaduledMessage:
             yield item
 
 
-    async def send_teleg_mesg_from_db(self):
+    async def send_teleg_mesg_from_coinmatric_sementim_db(self):
         try:
-         mesgs = self.firbase_client.get_documents_where_sent_is_false_telg()
+         mesgs = self.firbase_client.get_documents_where_sent_is_false(collection_name = "ready_to_sent_st2")
         
         except Exception as e :
          logger.error(f"Error : get_documents_where_sent_is_false_telg {e} ")
         if len(mesgs) == 0 : 
-                logger.error(f"Error : get_documents_where_sent_is_false_telg return 0 ")
+                logger.error("Error : get_documents_where_sent_is_false_telg return 0 ")
                 return
         async for mesg in self.async_iterable(mesgs):
-                logger.info(f"message id :")
+                logger.info("message id :")
                 await self.telegram_client.send_messages(target_username="@cryptoMissionX",message = mesg['ai_message'])
  
            

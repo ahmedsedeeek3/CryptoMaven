@@ -75,6 +75,18 @@ def genrat_sentiments_data_Tokenmetrics_to_db():
         logging.error(f"Error in generate_coin_metric_sentims_savedb: {e}")
 
 
+async def send_teleg_mesg_from_coinmatric_sementim_db():
+    try:
+        logging.info("Starting to send Telegram messages from DB...")
+        await schaduledMessage.send_teleg_mesg_from_coinmatric_sementim_db()
+        logging.info("Finished sending Telegram messages from DB.")
+    except Exception as e:
+        logging.error(f"Error in send_teleg_mesg_from_db: {e}")
+
+
+
+
+
 
 
 
