@@ -30,7 +30,7 @@ class SchaduledMessage:
 
 
     
-    async def schaduled_message_from_db(self):
+    async def send_teleg_mesg_from_db(self):
         '''
         check mssags in db then check schudel and 
         add them to schudel 
@@ -46,10 +46,9 @@ class SchaduledMessage:
         
         
         async for mesg in self.async_iterable(mesgs):
-                logger.info(f"message id :")
+                logger.info("message id :")
                 # check the scudel 
                 # add message Id to is patfor acourding to scudel 
-                
                 await self.telegram_client.send_messages(target_username="@cryptoMissionX",message = mesg['ai_message'])
  
     

@@ -42,7 +42,7 @@ class OpenAIGen:
 
     def get_generate_teleg_savedb(self):
         self.openAi.set_system_message(self.OpenAiPrombet.teleg_generator_prombt())
-        docs = self.firebase_client_teleg.get_documents_where_ai_is_false()   
+        docs = self.firebase_client.get_documents_where_ai_is_false()   
         if len(docs)== 0 :
             logging.warning(msg="ERRO doc retrived with ai false len is 0")
             
