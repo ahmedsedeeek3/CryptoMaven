@@ -7,9 +7,7 @@ reader.session
 *.so
 
 # Distribution / packaging
-mytestagent-1ab6f-firebase-adminsdk-l3v4u-c29a9e0a5d.json
-mytestagent-1ab6f-firebase-adminsdk-l3v4u-c29a9e0a5d.json
-twitter_tokens.json
+*.json
 *.log
 reader.session
 .Python
