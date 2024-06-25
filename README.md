@@ -4,11 +4,10 @@ With time, the tool will become more general-purpose oriented. Utilizing AI, it 
 
 This system gathers data from multiple sources and transforms it into comprehensive topics. It facilitates the creation of posts, tweets, and even drawings and images.
 
-All you will need is to provide the necessary keys it needs to run.
+All you will need is to provide the necessary keys it needs to run. You may find some keys in the code; I have left them as examples. Please note that all these keys are deprecated—use your own.
 
 Currently, the system is still in its research phase, with most of the existing code reflecting fast-paced, exploratory research. All new updates will be continuously added to the repository.
 
 If you feel like you want to help or contribute, please contact me at Ahmedsedeeek@gmail.com.
 
 Stay tuned for more updates as the project evolves!
-
